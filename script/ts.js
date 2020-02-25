@@ -48,10 +48,35 @@ var View;
 })(View || (View = {}));
 var View;
 (function (View) {
+    var Wave;
+    (function (Wave) {
+        var WaveManager = (function () {
+            function WaveManager() {
+                this.setWave();
+            }
+            WaveManager.prototype.setWave = function () {
+                var svg = document.getElementById("svg");
+                var width = Number(svg.getAttribute("width"));
+                var height = Number(svg.getAttribute("height"));
+                this._waveList = [];
+                var wave = new Wave.WaveObject(width, height);
+                this._waveList.push(wave);
+            };
+            WaveManager.prototype.enterFrame = function () {
+            };
+            return WaveManager;
+        }());
+        Wave.WaveManager = WaveManager;
+    })(Wave = View.Wave || (View.Wave = {}));
+})(View || (View = {}));
+var View;
+(function (View) {
     var ShipManager = View.Ship.ShipManager;
+    var WaveManager = View.Wave.WaveManager;
     var ViewManager = (function () {
         function ViewManager() {
             this._shipManager = new ShipManager();
+            this._waveManager = new WaveManager();
         }
         ViewManager.prototype.enterFrame = function () {
             this._shipManager.enterFrame();
@@ -210,5 +235,33 @@ var View;
         }(Ship.ShipBase));
         Ship.ShipChimney = ShipChimney;
     })(Ship = View.Ship || (View.Ship = {}));
+})(View || (View = {}));
+var View;
+(function (View) {
+    var Wave;
+    (function (Wave) {
+        var WavePoint = (function () {
+            function WavePoint() {
+                this.x = 0;
+                this.y = 0;
+            }
+            return WavePoint;
+        }());
+        Wave.WavePoint = WavePoint;
+    })(Wave = View.Wave || (View.Wave = {}));
+})(View || (View = {}));
+var View;
+(function (View) {
+    var Wave;
+    (function (Wave) {
+        var WaveObject = (function () {
+            function WaveObject(width, height) {
+            }
+            WaveObject.prototype.enterFrame = function () {
+            };
+            return WaveObject;
+        }());
+        Wave.WaveObject = WaveObject;
+    })(Wave = View.Wave || (View.Wave = {}));
 })(View || (View = {}));
 //# sourceMappingURL=ts.js.map
