@@ -16,7 +16,7 @@ namespace View
         public enterFrame():void
         {
             this._shipManager.enterFrame();
-
+            this._waveManager.enterFrame();
         }
 
         public resize():void

@@ -52,6 +52,9 @@ var View;
     (function (Wave) {
         var WaveManager = (function () {
             function WaveManager() {
+                var svg = document.getElementById("svg");
+                this._layer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                svg.appendChild(this._layer);
                 this.setWave();
             }
             WaveManager.prototype.setWave = function () {
@@ -59,10 +62,15 @@ var View;
                 var width = Number(svg.getAttribute("width"));
                 var height = Number(svg.getAttribute("height"));
                 this._waveList = [];
-                var wave = new Wave.WaveObject(width, height);
+                var wave = new Wave.WaveObject(width, height, this._layer);
                 this._waveList.push(wave);
             };
             WaveManager.prototype.enterFrame = function () {
+                var n = this._waveList.length;
+                for (var i = 0; i < n; i++) {
+                    var wave = this._waveList[i];
+                    wave.enterFrame();
+                }
             };
             return WaveManager;
         }());
@@ -80,6 +88,7 @@ var View;
         }
         ViewManager.prototype.enterFrame = function () {
             this._shipManager.enterFrame();
+            this._waveManager.enterFrame();
         };
         ViewManager.prototype.resize = function () {
         };
@@ -241,9 +250,11 @@ var View;
     var Wave;
     (function (Wave) {
         var WavePoint = (function () {
-            function WavePoint() {
+            function WavePoint(x, y) {
                 this.x = 0;
                 this.y = 0;
+                this.x = x;
+                this.y = y;
             }
             return WavePoint;
         }());
@@ -255,9 +266,57 @@ var View;
     var Wave;
     (function (Wave) {
         var WaveObject = (function () {
-            function WaveObject(width, height) {
+            function WaveObject(width, height, layer) {
+                this._count0 = 0;
+                this._count2 = 0;
+                this._polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+                this._polyline.setAttributeNS(null, "fill", "#003");
+                this._polyline.setAttributeNS(null, "opacity", "0.1");
+                this._height = height * 0.5;
+                this._count0 = 2 * Math.PI * Math.random();
+                this._count2 = 2 * Math.PI * Math.random();
+                this._pointList = [];
+                var n = width;
+                for (var i = 0; i < n; i++) {
+                    var x = i;
+                    var y = this._height + (100 * Math.cos(x * 0.01 + this._count0)) + (5 * Math.cos(x * 0.1 + this._count2));
+                    var point = new Wave.WavePoint(x, y);
+                    this._pointList.push(point);
+                }
+                this.startPoint = new Wave.WavePoint(0, height);
+                this.endPoint = new Wave.WavePoint(width, height);
+                this.draw();
+                layer.appendChild(this._polyline);
             }
             WaveObject.prototype.enterFrame = function () {
+                this._count0 += 0.001;
+                if (this._count0 > 2 * Math.PI) {
+                    this._count0 -= 2 * Math.PI;
+                }
+                this._count2 += 0.01;
+                if (this._count2 > 2 * Math.PI) {
+                    this._count2 -= 2 * Math.PI;
+                }
+                var n = this._pointList.length;
+                this._pointList = [];
+                for (var i = 0; i < n; i++) {
+                    var x = i;
+                    var y = this._height + (100 * Math.cos(x * 0.01 + this._count0)) + (5 * Math.cos(x * 0.1 + this._count2));
+                    var point = new Wave.WavePoint(x, y);
+                    this._pointList.push(point);
+                }
+                this.draw();
+            };
+            WaveObject.prototype.draw = function () {
+                var value = this.startPoint.x + "," + this.startPoint.y + " ";
+                var n = this._pointList.length;
+                for (var i = 0; i < n; i++) {
+                    var point = this._pointList[i];
+                    value += point.x + "," + point.y + " ";
+                }
+                value += this.endPoint.x + "," + this.endPoint.y + " ";
+                value += this.startPoint.x + "," + this.startPoint.y;
+                this._polyline.setAttributeNS(null, "points", value);
             };
             return WaveObject;
         }());
