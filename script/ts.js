@@ -147,7 +147,7 @@ var View;
                 this._waveList = [];
                 var n = 4;
                 for (var i = 0; i < n; i++) {
-                    var wave = new Wave.WaveObject(this._layer, height * 0.5 - 50 * i);
+                    var wave = new Wave.WaveObject(this._layer, i);
                     this._waveList.push(wave);
                 }
             };
@@ -194,7 +194,10 @@ var View;
 var ViewManager = View.ViewManager;
 var main;
 var svg_ship = "<g id=\"ship\"><path id=\"chimney\" d=\"M233.5,347c0-2-6-43-6-43l15-5-5,48Z\" transform=\"translate(-124.06 -299)\" style=\"fill:#200\"/><path id=\"bridge\" d=\"M247.11,327.23l-65.3,12.4s3.88,73.78,11.32,82.87l42.15-12.4C249.34,380.34,247.11,327.23,247.11,327.23Zm-56.85,22.45L201,348l.82,11.58-9.92,1.65Zm4.13,23.14-1.65-8.26,9.09-1.66.83,8.27Zm18.19-25.62v12.4l-7.44-.83L204.31,348Zm.82,24.8H206l-.83-9.92,8.26.82Z\" transform=\"translate(-124.06 -299)\" style=\"fill:#100\"/><path id=\"body\" d=\"M124.28,352.81s6.13,11.67,17.14,18.19c18.58,11,66.42,26.73,113.12,21.46s95.8-33.95,105.18-40l16.88-11A170.27,170.27,0,0,1,372,363.11c-6.37,21.44-11.11,43.83-39.3,70.85C298.18,467,221.53,465.62,176,445.6c-31.09-13.68-42.26-44.55-49.48-72.92C123,359,124.28,352.81,124.28,352.81Z\" transform=\"translate(-124.06 -299)\"/></g>";
-var svg_smoke1 = "<path id=\"smoke\" d=\"M218.57,273.56a6.49,6.49,0,0,0-10-8.27A12,12,0,0,0,203,264c-5,0-9,2.69-9,6s4,6,9,6a12.87,12.87,0,0,0,2.44-.23A2.1,2.1,0,0,0,205,277c0,2.21,4,4,9,4s9-1.79,9-4C223,275.53,221.22,274.26,218.57,273.56Z\" transform=\"translate(-194 -263)\"/>";
+var svg_smoke1 = "<path id=\"smoke1\" d=\"M218.57,273.56a6.49,6.49,0,0,0-10-8.27A12,12,0,0,0,203,264c-5,0-9,2.69-9,6s4,6,9,6a12.87,12.87,0,0,0,2.44-.23A2.1,2.1,0,0,0,205,277c0,2.21,4,4,9,4s9-1.79,9-4C223,275.53,221.22,274.26,218.57,273.56Z\" transform=\"translate(-194 -263)\"/>";
+var svg_smoke2 = "<path id=\"smoke2\" d=\"M182,226c0-3.31-4.7-6-10.5-6-4.59,0-8.47,1.68-9.9,4-4.27.22-7.6,1.91-7.6,4,0,.07,0,.15,0,.22-1.88,1-3,2.35-3,3.78,0,3.31,6,6,13.5,6s13.5-2.69,13.5-6a2.89,2.89,0,0,0-.26-1.18C180.32,229.73,182,228,182,226Z\" transform=\"translate(-151 -220)\"/>";
+var svg_smoke3 = "<path id=\"smoke3\" d=\"M120,214c0-1.66-3.36-3-7.5-3a17.79,17.79,0,0,0-2.91.23A14.43,14.43,0,0,0,107,211c-4.88,0-8.84,2.38-9,5.34a5.55,5.55,0,0,0-1,3.16c0,3.59,3.58,6.5,8,6.5a9.46,9.46,0,0,0,2.35-.29,16.61,16.61,0,0,0,3.15.29c4.69,0,8.5-1.79,8.5-4,0-1.38-1.48-2.6-3.74-3.32a3.86,3.86,0,0,0,.73-2C118.37,216.15,120,215.15,120,214Z\" transform=\"translate(-97 -211)\"/>";
+var svg_smoke4 = "<path id=\"smoke4\" d=\"M78,187.5c-.34-4.18-4.89-7.5-10.47-7.5-4,0-7.41,1.67-9.2,4.14-5.3.67-9.3,3.71-9.3,7.36,0,4.14,5.15,7.5,11.5,7.5a14.15,14.15,0,0,0,9.27-3.07c.72,0,1.47.07,2.23.07,7.18,0,13-2,13-4.5C85,189.76,82.14,188.25,78,187.5Z\" transform=\"translate(-49 -180)\"/>";
 var Main = (function () {
     function Main() {
         var _this = this;
@@ -353,18 +356,21 @@ var View;
                 this._g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 this._layer.appendChild(this._g);
                 var list = [
-                    new SmokeData(svg_smoke1, -194 - 15, -263 - 12)
+                    new SmokeData(svg_smoke1, -194 - 15, -263 - 12),
+                    new SmokeData(svg_smoke2, -151 - 15, -220 - 12),
+                    new SmokeData(svg_smoke3, -97 - 15, -211 - 12),
+                    new SmokeData(svg_smoke4, -49 - 15, -180 - 12)
                 ];
-                this._smokeData = list[0];
+                this._smokeData = list[Math.floor(Math.random() * list.length)];
                 this._g.innerHTML = this._smokeData.string;
                 var path = this._g.getElementsByTagName("path")[0];
-                var scaleValue = "scale(" + 1 + ")";
                 var translate = "translate(" + this._smokeData.marginX + " " + this._smokeData.marginY + ")";
-                path.setAttributeNS(null, "transform", scaleValue + " " + translate);
+                path.setAttributeNS(null, "transform", translate);
                 this.setPosition(x, y, 0);
                 var radian = Math.PI * (theta / 180);
                 var v = 5;
                 this.vx = v * Math.cos(radian);
+                this.vy = v * Math.sin(radian);
                 this.vy = v * Math.sin(radian);
             }
             SmokeObject.prototype.remove = function () {
@@ -419,8 +425,9 @@ var View;
     var Wave;
     (function (Wave) {
         var WaveObject = (function () {
-            function WaveObject(layer, waveHeight) {
+            function WaveObject(layer, waveCount) {
                 this._count0 = 0;
+                this._count1 = 0;
                 this._count2 = 0;
                 var svg = document.getElementById("svg");
                 var width = Number(svg.getAttribute("width"));
@@ -428,21 +435,21 @@ var View;
                 this._polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
                 this._polyline.setAttributeNS(null, "fill", "#003");
                 this._polyline.setAttributeNS(null, "opacity", "0.1");
-                this._height = waveHeight;
-                this._count0 = 2 * Math.PI * Math.random();
+                this._height = height * 0.5 - 50 * waveCount;
+                this._count0 = 0.5 * waveCount;
+                this._count1 = 1.0 * waveCount;
                 this._count2 = 2 * Math.PI * Math.random();
                 this._pointList = [];
                 var n = width;
                 for (var i = 0; i < n; i++) {
-                    var x = i;
-                    var y = this._height + (100 * Math.cos(x * 0.01 + this._count0)) + (5 * Math.cos(x * 0.1 + this._count2));
-                    var point = new Wave.WavePoint(x, y);
+                    var point = new Wave.WavePoint();
                     this._pointList.push(point);
                 }
                 this.startPoint = new Wave.WavePoint(0, height);
                 this.endPoint = new Wave.WavePoint(width, height);
-                this.draw();
                 layer.appendChild(this._polyline);
+                this.setWavePoint();
+                this.draw();
             }
             Object.defineProperty(WaveObject.prototype, "pointList", {
                 get: function () {
@@ -456,19 +463,28 @@ var View;
                 if (this._count0 > 2 * Math.PI) {
                     this._count0 -= 2 * Math.PI;
                 }
+                this._count1 += 0.005;
+                if (this._count1 > 2 * Math.PI) {
+                    this._count1 -= 2 * Math.PI;
+                }
                 this._count2 += 0.05;
                 if (this._count2 > 2 * Math.PI) {
                     this._count2 -= 2 * Math.PI;
                 }
+                this.setWavePoint();
+                this.draw();
+            };
+            WaveObject.prototype.setWavePoint = function () {
                 var n = this._pointList.length;
                 this._pointList = [];
                 for (var i = 0; i < n; i++) {
                     var x = i;
-                    var y = this._height + (100 * Math.cos(x * 0.01 + this._count0)) + (5 * Math.cos(x * 0.1 + this._count2));
+                    var y = this._height + (100 * Math.cos(x * 0.001 + this._count0)) +
+                        (50 * Math.cos(x * 0.01 + this._count0)) +
+                        (5 * Math.cos(x * 0.05 + this._count2));
                     var point = new Wave.WavePoint(x, y);
                     this._pointList.push(point);
                 }
-                this.draw();
             };
             WaveObject.prototype.draw = function () {
                 var value = this.startPoint.x + "," + this.startPoint.y + " ";
@@ -492,6 +508,8 @@ var View;
     (function (Wave) {
         var WavePoint = (function () {
             function WavePoint(x, y) {
+                if (x === void 0) { x = null; }
+                if (y === void 0) { y = null; }
                 this.x = 0;
                 this.y = 0;
                 this.x = x;

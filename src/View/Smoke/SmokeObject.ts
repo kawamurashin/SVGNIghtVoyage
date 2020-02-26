@@ -24,25 +24,25 @@ namespace View.Smoke {
             this._g = document.createElementNS("http://www.w3.org/2000/svg", "g");
             this._layer.appendChild(this._g);
             let list:SmokeData[] = [
-                new SmokeData(svg_smoke1, -194 - 15,-263 - 12 )
+                new SmokeData(svg_smoke1, -194 - 15,-263 - 12 ),
+                new SmokeData(svg_smoke2, -151 - 15,-220 - 12 ),
+                new SmokeData(svg_smoke3, -97 - 15,-211 - 12 ),
+                new SmokeData(svg_smoke4, -49 - 15,-180 - 12 )
             ];
-            this._smokeData = list[0];
+            this._smokeData = list[Math.floor(Math.random() *list.length)];
             this._g.innerHTML = this._smokeData.string;
 
             let path = this._g.getElementsByTagName("path")[0];
-            let scaleValue:string = "scale(" + 1 +")";
+            let translate = "translate(" + this._smokeData.marginX + " "+ this._smokeData.marginY +")"
 
-            let translate = "translate(" +this._smokeData.marginX + " "+ this._smokeData.marginY +")"
-
-            path.setAttributeNS(null, "transform", scaleValue + " " + translate);
-            //let smoke = this._g.getElementsByTagNameNS("http://www.w3.org/2000/svg","smoke222");
-
+            path.setAttributeNS(null, "transform", translate);
 
             this.setPosition(x,y , 0);
 
             let radian:number = Math.PI * (theta/180);
             let v:number = 5;
             this.vx = v * Math.cos(radian);
+            this.vy = v * Math.sin(radian);
             this.vy = v * Math.sin(radian);
 
 
