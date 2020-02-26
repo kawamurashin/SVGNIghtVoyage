@@ -1,6 +1,8 @@
+///<reference path="../Smoke/SmokeManager.ts"/>
 namespace View.Ship {
     import WaveObject = View.Wave.WaveObject;
     import WavePoint = View.Wave.WavePoint;
+    import SmokeManager = View.Smoke.SmokeManager;
 
     export class ShipManager {
         private _x: number;
@@ -15,22 +17,27 @@ namespace View.Ship {
         private _currentTheta: number = 0;
         //
         private _waveObject: WaveObject;
+        private _shipChimney:ShipChimney;
+        private _smokeManager: SmokeManager;
 
         constructor() {
+            const handler = () => {
+                this.smoke();
+            };
             let svg = document.getElementById("svg");
             svg.innerHTML = svg_ship;
             this._ship = document.getElementById("ship");
 
 
             this._baseList = [];
-            let chimney = new ShipChimney();
-            this._baseList.push(chimney);
+            this._shipChimney = new ShipChimney();
+            this._baseList.push(this._shipChimney);
             let bridge = new ShipBridge();
             this._baseList.push(bridge);
             let body = new ShipBody();
             this._baseList.push(body);
 
-            bridge.setChimney(chimney);
+            bridge.setChimney(this._shipChimney);
             body.setBridge(bridge);
 
 
@@ -40,7 +47,10 @@ namespace View.Ship {
             this._circle.setAttributeNS(null, "cy", "0");
             this._circle.setAttributeNS(null, "r", "10");
 
-            svg.appendChild(this._circle)
+            svg.appendChild(this._circle);
+
+
+            setInterval(handler, 500)
 
         }
 
@@ -67,6 +77,13 @@ namespace View.Ship {
             this.setShipPosition(x);
         }
 
+        private smoke() {
+            this._shipChimney.start()
+            let x:number = this._x;
+            let y:number = this._y;
+            this._smokeManager.start(x, y, this._currentTheta);
+        }
+
         private setShipPosition(x: number): void {
             let wavePoint: WavePoint = this._waveObject.pointList[x];
             let nextPoint: WavePoint = this._waveObject.pointList[x + 1];
@@ -88,6 +105,10 @@ namespace View.Ship {
 
 
             this._ship.setAttributeNS(null, "transform", value + " " + rotate);
+        }
+
+        setSmokeManager(smokeManager: SmokeManager) {
+            this._smokeManager = smokeManager;
         }
     }
 }
