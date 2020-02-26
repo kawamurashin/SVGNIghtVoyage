@@ -1,6 +1,9 @@
 namespace View.Wave
 {
     export class WaveObject {
+        get pointList(): View.Wave.WavePoint[] {
+            return this._pointList;
+        }
 
         private _pointList:WavePoint[];
         private startPoint:WavePoint;
@@ -10,17 +13,20 @@ namespace View.Wave
         private _count2:number = 0;
 
         private _height:number;
-        constructor(width:number ,height:number , layer:SVGElement) {
+        constructor(layer:SVGElement ,waveHeight:number ) {
+            let svg = document.getElementById("svg");
+            let width:number = Number(svg.getAttribute("width"));
+            let height:number = Number(svg.getAttribute("height"));
 
            this._polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
 
             this._polyline.setAttributeNS(null, "fill", "#003");
             this._polyline.setAttributeNS(null, "opacity", "0.1");
 
-            this._height = height*0.5;
+            this._height = waveHeight;
 
-            this._count0 = 2*Math.PI * Math.random();
-            this._count2 = 2*Math.PI * Math.random();
+            this._count0 = 2 * Math.PI * Math.random();
+            this._count2 = 2 * Math.PI * Math.random();
 
             this._pointList = [];
             let n:number = width;
@@ -46,10 +52,10 @@ namespace View.Wave
             {
                 this._count0 -=2*Math.PI;
             }
-            this._count2 += 0.01;
-            if(this._count2 > 2*Math.PI)
+            this._count2 += 0.05;
+            if(this._count2 > 2 * Math.PI)
             {
-                this._count2 -=2*Math.PI;
+                this._count2 -= 2*Math.PI;
             }
             let n:number = this._pointList.length;
             this._pointList = [];

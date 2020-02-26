@@ -11,6 +11,8 @@ namespace View
         constructor() {
             this._shipManager = new ShipManager();
             this._waveManager = new WaveManager();
+            let waveObject = this._waveManager.getShipWave();
+            this._shipManager.setWave(waveObject);
         }
 
         public enterFrame():void

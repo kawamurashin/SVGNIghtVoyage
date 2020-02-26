@@ -17,13 +17,11 @@ var View;
     (function (Ship) {
         var ShipManager = (function () {
             function ShipManager() {
+                this._vr = 0;
+                this._currentTheta = 0;
                 var svg = document.getElementById("svg");
                 svg.innerHTML = svg_ship;
-                var ship = document.getElementById("ship");
-                this._x = 100;
-                this._y = 0;
-                var value = "translate(" + this._x + "," + this._y + ")";
-                ship.setAttributeNS(null, "transform", value);
+                this._ship = document.getElementById("ship");
                 this._baseList = [];
                 var chimney = new Ship.ShipChimney();
                 this._baseList.push(chimney);
@@ -33,6 +31,12 @@ var View;
                 this._baseList.push(body);
                 bridge.setChimney(chimney);
                 body.setBridge(bridge);
+                this._circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                this._circle.setAttributeNS(null, "fill", "#F00");
+                this._circle.setAttributeNS(null, "cx", "0");
+                this._circle.setAttributeNS(null, "cy", "0");
+                this._circle.setAttributeNS(null, "r", "10");
+                svg.appendChild(this._circle);
             }
             ShipManager.prototype.enterFrame = function () {
                 var n = this._baseList.length;
@@ -40,6 +44,29 @@ var View;
                     var base = this._baseList[i];
                     base.enterFrame();
                 }
+                var x = 350;
+                var wavePoint = this._waveObject.pointList[x];
+                this._circle.setAttributeNS(null, "cx", wavePoint.x.toString());
+                this._circle.setAttributeNS(null, "cy", wavePoint.y.toString());
+                this.setShipPosition(x);
+            };
+            ShipManager.prototype.setWave = function (waveObject) {
+                this._waveObject = waveObject;
+                var x = 350;
+                this.setShipPosition(x);
+            };
+            ShipManager.prototype.setShipPosition = function (x) {
+                var wavePoint = this._waveObject.pointList[x];
+                var nextPoint = this._waveObject.pointList[x + 1];
+                var theta = 180 * (Math.atan2(nextPoint.y - wavePoint.y, nextPoint.x - wavePoint.x) / Math.PI);
+                var dTheta = theta - this._currentTheta;
+                this._vr += dTheta * 0.001 - 0.5 * this._vr;
+                this._currentTheta += this._vr;
+                this._x = wavePoint.x - 120;
+                this._y = wavePoint.y - 150;
+                var value = "translate(" + this._x + "," + this._y + ")";
+                var rotate = "rotate(" + this._currentTheta + "," + 120 + "," + 150 + ")";
+                this._ship.setAttributeNS(null, "transform", value + " " + rotate);
             };
             return ShipManager;
         }());
@@ -59,11 +86,13 @@ var View;
             }
             WaveManager.prototype.setWave = function () {
                 var svg = document.getElementById("svg");
-                var width = Number(svg.getAttribute("width"));
                 var height = Number(svg.getAttribute("height"));
                 this._waveList = [];
-                var wave = new Wave.WaveObject(width, height, this._layer);
-                this._waveList.push(wave);
+                var n = 4;
+                for (var i = 0; i < n; i++) {
+                    var wave = new Wave.WaveObject(this._layer, height * 0.5 - 50 * i);
+                    this._waveList.push(wave);
+                }
             };
             WaveManager.prototype.enterFrame = function () {
                 var n = this._waveList.length;
@@ -71,6 +100,9 @@ var View;
                     var wave = this._waveList[i];
                     wave.enterFrame();
                 }
+            };
+            WaveManager.prototype.getShipWave = function () {
+                return this._waveList[0];
             };
             return WaveManager;
         }());
@@ -85,6 +117,8 @@ var View;
         function ViewManager() {
             this._shipManager = new ShipManager();
             this._waveManager = new WaveManager();
+            var waveObject = this._waveManager.getShipWave();
+            this._shipManager.setWave(waveObject);
         }
         ViewManager.prototype.enterFrame = function () {
             this._shipManager.enterFrame();
@@ -266,13 +300,16 @@ var View;
     var Wave;
     (function (Wave) {
         var WaveObject = (function () {
-            function WaveObject(width, height, layer) {
+            function WaveObject(layer, waveHeight) {
                 this._count0 = 0;
                 this._count2 = 0;
+                var svg = document.getElementById("svg");
+                var width = Number(svg.getAttribute("width"));
+                var height = Number(svg.getAttribute("height"));
                 this._polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
                 this._polyline.setAttributeNS(null, "fill", "#003");
                 this._polyline.setAttributeNS(null, "opacity", "0.1");
-                this._height = height * 0.5;
+                this._height = waveHeight;
                 this._count0 = 2 * Math.PI * Math.random();
                 this._count2 = 2 * Math.PI * Math.random();
                 this._pointList = [];
@@ -288,12 +325,19 @@ var View;
                 this.draw();
                 layer.appendChild(this._polyline);
             }
+            Object.defineProperty(WaveObject.prototype, "pointList", {
+                get: function () {
+                    return this._pointList;
+                },
+                enumerable: true,
+                configurable: true
+            });
             WaveObject.prototype.enterFrame = function () {
                 this._count0 += 0.001;
                 if (this._count0 > 2 * Math.PI) {
                     this._count0 -= 2 * Math.PI;
                 }
-                this._count2 += 0.01;
+                this._count2 += 0.05;
                 if (this._count2 > 2 * Math.PI) {
                     this._count2 -= 2 * Math.PI;
                 }
@@ -322,5 +366,29 @@ var View;
         }());
         Wave.WaveObject = WaveObject;
     })(Wave = View.Wave || (View.Wave = {}));
+})(View || (View = {}));
+var View;
+(function (View) {
+    var Smoke;
+    (function (Smoke) {
+        var SmokeManager = (function () {
+            function SmokeManager() {
+            }
+            return SmokeManager;
+        }());
+        Smoke.SmokeManager = SmokeManager;
+    })(Smoke = View.Smoke || (View.Smoke = {}));
+})(View || (View = {}));
+var View;
+(function (View) {
+    var Smoke;
+    (function (Smoke) {
+        var SmokeObject = (function () {
+            function SmokeObject() {
+            }
+            return SmokeObject;
+        }());
+        Smoke.SmokeObject = SmokeObject;
+    })(Smoke = View.Smoke || (View.Smoke = {}));
 })(View || (View = {}));
 //# sourceMappingURL=ts.js.map

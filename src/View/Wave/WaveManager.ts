@@ -2,6 +2,7 @@ namespace View.Wave
 {
     export class WaveManager {
 
+
         private _waveList:WaveObject[];
         private _layer:SVGElement
         constructor() {
@@ -13,11 +14,16 @@ namespace View.Wave
         private setWave():void
         {
             let svg = document.getElementById("svg");
-            let width:number = Number(svg.getAttribute("width"));
+
             let height:number = Number(svg.getAttribute("height"));
             this._waveList = [];
-            let wave = new WaveObject(width , height , this._layer);
-            this._waveList.push(wave);
+            let n:number = 4;
+            for(let i:number = 0;i<n;i++)
+            {
+                let wave = new WaveObject(this._layer ,height *0.5 - 50*i );
+                this._waveList.push(wave);
+            }
+
         }
         public enterFrame():void
         {
@@ -30,5 +36,8 @@ namespace View.Wave
 
         }
 
+        getShipWave() {
+            return this._waveList[0];
+        }
     }
 }
