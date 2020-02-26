@@ -36,7 +36,10 @@ var View;
                     var dy = 0;
                     smoke.vy += dy - 0.05 * smoke.vy;
                     smoke.y += smoke.vy + -0.4;
-                    smoke.setPosition(smoke.x, smoke.y);
+                    var dScale = 1 - smoke.scale;
+                    smoke.vScale += dScale * 0.01 - 0.05 * smoke.vScale;
+                    smoke.scale += smoke.vScale;
+                    smoke.setPosition(smoke.x, smoke.y, smoke.scale);
                 }
                 this.checkSmokePosition();
             };
@@ -82,12 +85,6 @@ var View;
                 this._baseList.push(body);
                 bridge.setChimney(this._shipChimney);
                 body.setBridge(bridge);
-                this._circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                this._circle.setAttributeNS(null, "fill", "#F00");
-                this._circle.setAttributeNS(null, "cx", "0");
-                this._circle.setAttributeNS(null, "cy", "0");
-                this._circle.setAttributeNS(null, "r", "10");
-                svg.appendChild(this._circle);
                 setInterval(handler, 500);
             }
             ShipManager.prototype.enterFrame = function () {
@@ -98,8 +95,6 @@ var View;
                 }
                 var x = 350;
                 var wavePoint = this._waveObject.pointList[x];
-                this._circle.setAttributeNS(null, "cx", wavePoint.x.toString());
-                this._circle.setAttributeNS(null, "cy", wavePoint.y.toString());
                 this.setShipPosition(x);
             };
             ShipManager.prototype.setWave = function (waveObject) {
@@ -109,8 +104,9 @@ var View;
             };
             ShipManager.prototype.smoke = function () {
                 this._shipChimney.start();
-                var x = this._x;
-                var y = this._y;
+                var theta = Math.atan2(100, 5) + Math.PI * (this._currentTheta / 180);
+                var x = this._x + 120 - 110 * Math.cos(theta);
+                var y = this._y + 150 - 110 * Math.sin(theta);
                 this._smokeManager.start(x, y, this._currentTheta);
             };
             ShipManager.prototype.setShipPosition = function (x) {
@@ -198,7 +194,7 @@ var View;
 var ViewManager = View.ViewManager;
 var main;
 var svg_ship = "<g id=\"ship\"><path id=\"chimney\" d=\"M233.5,347c0-2-6-43-6-43l15-5-5,48Z\" transform=\"translate(-124.06 -299)\" style=\"fill:#200\"/><path id=\"bridge\" d=\"M247.11,327.23l-65.3,12.4s3.88,73.78,11.32,82.87l42.15-12.4C249.34,380.34,247.11,327.23,247.11,327.23Zm-56.85,22.45L201,348l.82,11.58-9.92,1.65Zm4.13,23.14-1.65-8.26,9.09-1.66.83,8.27Zm18.19-25.62v12.4l-7.44-.83L204.31,348Zm.82,24.8H206l-.83-9.92,8.26.82Z\" transform=\"translate(-124.06 -299)\" style=\"fill:#100\"/><path id=\"body\" d=\"M124.28,352.81s6.13,11.67,17.14,18.19c18.58,11,66.42,26.73,113.12,21.46s95.8-33.95,105.18-40l16.88-11A170.27,170.27,0,0,1,372,363.11c-6.37,21.44-11.11,43.83-39.3,70.85C298.18,467,221.53,465.62,176,445.6c-31.09-13.68-42.26-44.55-49.48-72.92C123,359,124.28,352.81,124.28,352.81Z\" transform=\"translate(-124.06 -299)\"/></g>";
-var svg_smoke1 = "<path id=\"smoke1\" d=\"M218.57,273.56a6.49,6.49,0,0,0-10-8.27A12,12,0,0,0,203,264c-5,0-9,2.69-9,6s4,6,9,6a12.87,12.87,0,0,0,2.44-.23A2.1,2.1,0,0,0,205,277c0,2.21,4,4,9,4s9-1.79,9-4C223,275.53,221.22,274.26,218.57,273.56Z\" transform=\"translate(-194 -263)\"/>";
+var svg_smoke1 = "<path id=\"smoke\" d=\"M218.57,273.56a6.49,6.49,0,0,0-10-8.27A12,12,0,0,0,203,264c-5,0-9,2.69-9,6s4,6,9,6a12.87,12.87,0,0,0,2.44-.23A2.1,2.1,0,0,0,205,277c0,2.21,4,4,9,4s9-1.79,9-4C223,275.53,221.22,274.26,218.57,273.56Z\" transform=\"translate(-194 -263)\"/>";
 var Main = (function () {
     function Main() {
         var _this = this;
@@ -346,19 +342,77 @@ var View;
 })(View || (View = {}));
 var View;
 (function (View) {
-    var Wave;
-    (function (Wave) {
-        var WavePoint = (function () {
-            function WavePoint(x, y) {
-                this.x = 0;
-                this.y = 0;
+    var Smoke;
+    (function (Smoke) {
+        var SmokeObject = (function () {
+            function SmokeObject(layer, x, y, theta) {
+                this.vx = 0;
+                this.vy = 0;
+                this.vScale = 0;
+                this._layer = layer;
+                this._g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                this._layer.appendChild(this._g);
+                var list = [
+                    new SmokeData(svg_smoke1, -194 - 15, -263 - 12)
+                ];
+                this._smokeData = list[0];
+                this._g.innerHTML = this._smokeData.string;
+                var path = this._g.getElementsByTagName("path")[0];
+                var scaleValue = "scale(" + 1 + ")";
+                var translate = "translate(" + this._smokeData.marginX + " " + this._smokeData.marginY + ")";
+                path.setAttributeNS(null, "transform", scaleValue + " " + translate);
+                this.setPosition(x, y, 0);
+                var radian = Math.PI * (theta / 180);
+                var v = 5;
+                this.vx = v * Math.cos(radian);
+                this.vy = v * Math.sin(radian);
+            }
+            SmokeObject.prototype.remove = function () {
+                this._layer.removeChild(this._g);
+            };
+            SmokeObject.prototype.setPosition = function (x, y, scale) {
                 this.x = x;
                 this.y = y;
-            }
-            return WavePoint;
+                var valueX = this.x;
+                var valueY = this.y;
+                var value = "translate(" + valueX + "," + valueY + ")";
+                this.scale = scale;
+                var scaleValue = "scale(" + this.scale + ")";
+                this._g.setAttributeNS(null, "transform", value + " " + scaleValue);
+            };
+            return SmokeObject;
         }());
-        Wave.WavePoint = WavePoint;
-    })(Wave = View.Wave || (View.Wave = {}));
+        Smoke.SmokeObject = SmokeObject;
+        var SmokeData = (function () {
+            function SmokeData(string, marginX, marginY) {
+                this._string = string;
+                this._marginX = marginX;
+                this._marginY = marginY;
+            }
+            Object.defineProperty(SmokeData.prototype, "marginY", {
+                get: function () {
+                    return this._marginY;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(SmokeData.prototype, "marginX", {
+                get: function () {
+                    return this._marginX;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(SmokeData.prototype, "string", {
+                get: function () {
+                    return this._string;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            return SmokeData;
+        }());
+    })(Smoke = View.Smoke || (View.Smoke = {}));
 })(View || (View = {}));
 var View;
 (function (View) {
@@ -434,69 +488,18 @@ var View;
 })(View || (View = {}));
 var View;
 (function (View) {
-    var Smoke;
-    (function (Smoke) {
-        var SmokeObject = (function () {
-            function SmokeObject(layer, x, y, theta) {
-                this.vx = 0;
-                this.vy = 0;
-                this._layer = layer;
-                this._g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                this._layer.appendChild(this._g);
-                var list = [
-                    new SmokeData(svg_smoke1, 15, 12)
-                ];
-                this._smokeData = list[0];
-                this._g.innerHTML = this._smokeData.string;
-                this.setPosition(x, y);
-                var rad = Math.PI * (theta / 180);
-                var v = 5;
-                this.vx = v * Math.cos(rad);
-                this.vy = v * Math.sin(rad);
-            }
-            SmokeObject.prototype.remove = function () {
-                this._layer.removeChild(this._g);
-            };
-            SmokeObject.prototype.setPosition = function (x, y) {
+    var Wave;
+    (function (Wave) {
+        var WavePoint = (function () {
+            function WavePoint(x, y) {
+                this.x = 0;
+                this.y = 0;
                 this.x = x;
                 this.y = y;
-                var valueX = this.x - this._smokeData.marginX;
-                var valueY = this.y - this._smokeData.marginY;
-                var value = "translate(" + valueX + "," + valueY + ")";
-                this._g.setAttributeNS(null, "transform", value);
-            };
-            return SmokeObject;
-        }());
-        Smoke.SmokeObject = SmokeObject;
-        var SmokeData = (function () {
-            function SmokeData(string, marginX, marginY) {
-                this._string = string;
-                this._marginX = marginX;
-                this._marginY = marginY;
             }
-            Object.defineProperty(SmokeData.prototype, "marginY", {
-                get: function () {
-                    return this._marginY;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(SmokeData.prototype, "marginX", {
-                get: function () {
-                    return this._marginX;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(SmokeData.prototype, "string", {
-                get: function () {
-                    return this._string;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            return SmokeData;
+            return WavePoint;
         }());
-    })(Smoke = View.Smoke || (View.Smoke = {}));
+        Wave.WavePoint = WavePoint;
+    })(Wave = View.Wave || (View.Wave = {}));
 })(View || (View = {}));
 //# sourceMappingURL=ts.js.map

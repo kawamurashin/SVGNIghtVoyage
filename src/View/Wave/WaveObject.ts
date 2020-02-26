@@ -11,7 +11,6 @@ namespace View.Wave
         private _polyline;
         private _count0:number = 0;
         private _count2:number = 0;
-
         private _height:number;
         constructor(layer:SVGElement ,waveHeight:number ) {
             let svg = document.getElementById("svg");

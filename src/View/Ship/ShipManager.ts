@@ -41,13 +41,16 @@ namespace View.Ship {
             body.setBridge(bridge);
 
 
+            /*
             this._circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            this._circle.setAttributeNS(null, "fill", "#F00");
+            this._circle.setAttributeNS(null, "fill", "#F0F");
             this._circle.setAttributeNS(null, "cx", "0");
             this._circle.setAttributeNS(null, "cy", "0");
             this._circle.setAttributeNS(null, "r", "10");
-
             svg.appendChild(this._circle);
+             */
+
+
 
 
             setInterval(handler, 500)
@@ -64,8 +67,8 @@ namespace View.Ship {
             let x: number = 350;
             let wavePoint: WavePoint = this._waveObject.pointList[x];
 
-            this._circle.setAttributeNS(null, "cx", wavePoint.x.toString());
-            this._circle.setAttributeNS(null, "cy", wavePoint.y.toString());
+            //this._circle.setAttributeNS(null, "cx", wavePoint.x.toString());
+            //this._circle.setAttributeNS(null, "cy", wavePoint.y.toString());
 
             this.setShipPosition(x);
         }
@@ -79,8 +82,10 @@ namespace View.Ship {
 
         private smoke() {
             this._shipChimney.start()
-            let x:number = this._x;
-            let y:number = this._y;
+
+            let theta:number = Math.atan2(100,5) + Math.PI *(this._currentTheta / 180)
+            let x:number = this._x + 120 - 110 * Math.cos(theta);
+            let y:number = this._y + 150 - 110 * Math.sin(theta);
             this._smokeManager.start(x, y, this._currentTheta);
         }
 
@@ -94,15 +99,10 @@ namespace View.Ship {
             this._vr += dTheta * 0.001 - 0.5 * this._vr;
             this._currentTheta += this._vr;
 
-
             this._x = wavePoint.x - 120;
             this._y = wavePoint.y - 150;
             let value = "translate(" + this._x + "," + this._y + ")";
-            //this._ship.setAttributeNS(null, "transform", value);
-
             let rotate = "rotate(" + this._currentTheta + "," + 120 + "," + 150 + ")";
-            //this._ship.setAttributeNS(null, "transform", rotate);
-
 
             this._ship.setAttributeNS(null, "transform", value + " " + rotate);
         }

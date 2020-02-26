@@ -12,6 +12,7 @@ namespace View.Smoke {
         }
 
         public start(x: number, y: number, theta: number) {
+
             let smoke: SmokeObject = new SmokeObject(this._layer, x, y, theta - 90);
             this._smokeList.push(smoke);
         }
@@ -27,7 +28,15 @@ namespace View.Smoke {
                 smoke.vy += dy - 0.05 * smoke.vy;
                 smoke.y += smoke.vy + -0.4;
 
-                smoke.setPosition(smoke.x, smoke.y);
+
+
+
+                let dScale = 1- smoke.scale;
+                smoke.vScale += dScale *0.01 - 0.05*smoke.vScale;
+                smoke.scale += smoke.vScale;
+
+
+                smoke.setPosition(smoke.x, smoke.y,smoke.scale);
             }
             this.checkSmokePosition()
         }
