@@ -5,6 +5,15 @@ namespace View.Ship {
     import SmokeManager = View.Smoke.SmokeManager;
 
     export class ShipManager {
+        get y(): number {
+            return this._y;
+        }
+        get x(): number {
+            return this._x;
+        }
+        get currentTheta(): number {
+            return this._currentTheta;
+        }
         private _x: number;
         private _y: number;
         private _marginX: number;
@@ -37,21 +46,21 @@ namespace View.Ship {
             let body = new ShipBody();
             this._baseList.push(body);
 
+
+
+
+
+
+
+            let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute("cx", "120");
+            circle.setAttribute("cy", "150");
+            circle.setAttribute("r", "5");
+            circle.setAttribute("fill", "#FFF");
+            this._ship.appendChild(circle);
+
             bridge.setChimney(this._shipChimney);
             body.setBridge(bridge);
-
-
-            /*
-            this._circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            this._circle.setAttributeNS(null, "fill", "#F0F");
-            this._circle.setAttributeNS(null, "cx", "0");
-            this._circle.setAttributeNS(null, "cy", "0");
-            this._circle.setAttributeNS(null, "r", "10");
-            svg.appendChild(this._circle);
-             */
-
-
-
 
             setInterval(handler, 500)
 

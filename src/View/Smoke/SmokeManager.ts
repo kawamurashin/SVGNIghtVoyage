@@ -28,13 +28,9 @@ namespace View.Smoke {
                 smoke.vy += dy - 0.05 * smoke.vy;
                 smoke.y += smoke.vy + -0.4;
 
-
-
-
                 let dScale = 1- smoke.scale;
                 smoke.vScale += dScale *0.01 - 0.05*smoke.vScale;
                 smoke.scale += smoke.vScale;
-
 
                 smoke.setPosition(smoke.x, smoke.y,smoke.scale);
             }
