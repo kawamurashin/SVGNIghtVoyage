@@ -18,6 +18,7 @@ namespace View.Fisherman.Line
         }
 
         set x(value: number) {
+            if(this.isFloating)return;
             this._x = value;
             this._circle.setAttribute("cx", this._x.toString());
         }
@@ -27,12 +28,14 @@ namespace View.Fisherman.Line
         private _y:number;
         private _mass:number;
 
+        public isFloating:boolean = false;
+        public isSwing:boolean = false;
+
 
 
         private readonly _circle:SVGElement;
 
         constructor(layer:SVGElement,x:number ,y:number, mass:number = 1) {
-            console.log("start")
             this._circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             this._circle.setAttribute("r", "3");
             this._circle.setAttribute("fill", "#F0F");
@@ -41,6 +44,11 @@ namespace View.Fisherman.Line
             this.x = x;
             this.y = y;
             this._mass = mass;
+        }
+        public float():void
+        {
+            this._circle.setAttribute("r", "5");
+            this._circle.setAttribute("fill", "#FFF");
         }
     }
 }

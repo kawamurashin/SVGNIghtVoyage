@@ -339,7 +339,8 @@ var View;
                     if (mass === void 0) { mass = 1; }
                     this.vx = 0;
                     this.vy = 0;
-                    console.log("start");
+                    this.isFloating = false;
+                    this.isSwing = false;
                     this._circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     this._circle.setAttribute("r", "3");
                     this._circle.setAttribute("fill", "#F0F");
@@ -371,17 +372,105 @@ var View;
                         return this._x;
                     },
                     set: function (value) {
+                        if (this.isFloating)
+                            return;
                         this._x = value;
                         this._circle.setAttribute("cx", this._x.toString());
                     },
                     enumerable: true,
                     configurable: true
                 });
+                LinePoint.prototype.float = function () {
+                    this._circle.setAttribute("r", "5");
+                    this._circle.setAttribute("fill", "#FFF");
+                };
                 return LinePoint;
             }());
             Line.LinePoint = LinePoint;
         })(Line = Fisherman.Line || (Fisherman.Line = {}));
     })(Fisherman = View.Fisherman || (View.Fisherman = {}));
+})(View || (View = {}));
+var View;
+(function (View) {
+    var Wave;
+    (function (Wave) {
+        var WaveObject = (function () {
+            function WaveObject(layer, waveCount) {
+                this._count0 = 0;
+                this._count1 = 0;
+                this._count2 = 0;
+                var svg = document.getElementById("svg");
+                var width = Number(svg.getAttribute("width"));
+                var height = Number(svg.getAttribute("height"));
+                this._polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+                this._polyline.setAttributeNS(null, "fill", "#003");
+                this._polyline.setAttributeNS(null, "opacity", "0.1");
+                this._height = height * 0.5 - 50 * waveCount;
+                this._count0 = 0.5 * waveCount;
+                this._count1 = 1.0 * waveCount;
+                this._count2 = 2 * Math.PI * Math.random();
+                this._pointList = [];
+                var n = width;
+                for (var i = 0; i < n; i++) {
+                    var point = new Wave.WavePoint();
+                    this._pointList.push(point);
+                }
+                this.startPoint = new Wave.WavePoint(0, height);
+                this.endPoint = new Wave.WavePoint(width, height);
+                layer.appendChild(this._polyline);
+                this.setWavePoint();
+                this.draw();
+            }
+            Object.defineProperty(WaveObject.prototype, "pointList", {
+                get: function () {
+                    return this._pointList;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            WaveObject.prototype.enterFrame = function () {
+                this._count0 += 0.001;
+                if (this._count0 > 2 * Math.PI) {
+                    this._count0 -= 2 * Math.PI;
+                }
+                this._count1 += 0.005;
+                if (this._count1 > 2 * Math.PI) {
+                    this._count1 -= 2 * Math.PI;
+                }
+                this._count2 += 0.05;
+                if (this._count2 > 2 * Math.PI) {
+                    this._count2 -= 2 * Math.PI;
+                }
+                this.setWavePoint();
+                this.draw();
+            };
+            WaveObject.prototype.setWavePoint = function () {
+                var n = this._pointList.length;
+                this._pointList = [];
+                for (var i = 0; i < n; i++) {
+                    var x = i;
+                    var y = this._height + (100 * Math.cos(x * 0.001 + this._count0)) +
+                        (50 * Math.cos(x * 0.01 + this._count0)) +
+                        (5 * Math.cos(x * 0.05 + this._count2));
+                    var point = new Wave.WavePoint(x, y);
+                    this._pointList.push(point);
+                }
+            };
+            WaveObject.prototype.draw = function () {
+                var value = this.startPoint.x + "," + this.startPoint.y + " ";
+                var n = this._pointList.length;
+                for (var i = 0; i < n; i++) {
+                    var point = this._pointList[i];
+                    value += point.x + "," + point.y + " ";
+                }
+                value += this.endPoint.x + "," + this.endPoint.y + " ";
+                value += this.startPoint.x + "," + this.startPoint.y;
+                this._polyline.setAttributeNS(null, "points", value);
+            };
+            return WaveObject;
+        }());
+        Wave.WaveObject = WaveObject;
+    })(Wave = View.Wave || (View.Wave = {}));
 })(View || (View = {}));
 var View;
 (function (View) {
@@ -392,21 +481,21 @@ var View;
             var LineManager = (function () {
                 function LineManager() {
                     this._length = 40;
+                    this.k = 0.1;
+                    this._linePointList = [];
                 }
-                LineManager.prototype.setRod = function (rodManager) {
-                    this._rodManager = rodManager;
-                    this.init();
-                };
                 LineManager.prototype.enterFrame = function (rodTopX, rodTopY) {
                     if (rodTopX === void 0) { rodTopX = null; }
                     if (rodTopY === void 0) { rodTopY = null; }
-                    var k = 0.3;
-                    var u = 0.1;
-                    var g = 0.08;
+                    var u = 0.03;
+                    var g = 0.003;
                     var n = this._linePointList.length;
+                    if (this._linePointList.length == 0) {
+                        return;
+                    }
                     this._rodTop = this._linePointList[0];
-                    this._rodTop.x = this._rodManager.linePointX;
-                    this._rodTop.y = this._rodManager.linePointY;
+                    this._rodTop.x = rodTopX;
+                    this._rodTop.y = rodTopY;
                     for (var i = 1; i < n; i++) {
                         var linePoint = this._linePointList[i];
                         linePoint.vy += g * linePoint.mass;
@@ -421,15 +510,15 @@ var View;
                         if (i != 0) {
                             prev = this._linePointList[i - 1];
                             dx = prev.x - linePoint.x;
-                            linePoint.vx = dx * k - u * linePoint.vx;
+                            linePoint.vx += dx * this.k - u * linePoint.vx;
                             linePoint.x += linePoint.vx;
                             dy = prev.y - linePoint.y;
-                            linePoint.vy = dy * k - u * linePoint.vy;
+                            linePoint.vy += dy * this.k - u * linePoint.vy;
                             linePoint.y += linePoint.vy;
                             if (i != 1) {
-                                prev.vx = -dx * k - u * prev.vx;
+                                prev.vx += -dx * this.k - u * prev.vx;
                                 prev.x += prev.vx;
-                                prev.vy = -dy * k - u * prev.vy;
+                                prev.vy += -dy * this.k - u * prev.vy;
                                 prev.y += prev.vy;
                             }
                         }
@@ -438,15 +527,35 @@ var View;
                             dx = next.x - linePoint.x;
                             dy = next.y - linePoint.y;
                             if (i != 0) {
-                                linePoint.vx = dx * k - u * linePoint.vx;
-                                linePoint.vy = dy * k - u * linePoint.vy;
+                                linePoint.vx += dx * this.k - u * linePoint.vx;
+                                linePoint.vy += dy * this.k - u * linePoint.vy;
                                 linePoint.x += linePoint.vx;
                                 linePoint.y += linePoint.vy;
                             }
-                            next.vx = -dx * k - u * next.vx;
-                            next.vy = -dy * k - u * next.vy;
+                            next.vx += -dx * this.k - u * next.vx;
+                            next.vy += -dy * this.k - u * next.vy;
                             next.x += next.vx;
                             next.y += next.vy;
+                        }
+                    }
+                    if (this._floatPoint.isSwing == false) {
+                        var fx = Math.floor(this._floatPoint.x);
+                        var pointList = this._wave.pointList;
+                        if (fx > 0 && fx < pointList.length) {
+                            var point = pointList[fx];
+                            if (this._floatPoint.y > point.y) {
+                                this._floatPoint.isFloating = true;
+                                this._floatPoint.vx = 0;
+                                this._floatPoint.vy = -0.5;
+                                this._floatPoint.y += this._floatPoint.vy;
+                            }
+                        }
+                    }
+                    if (this.k < 0.001) {
+                        var dk = 0.001 - this.k;
+                        this.k += dk * 0.3;
+                        if (this.k > 0.001) {
+                            this.k = 0.001;
                         }
                     }
                 };
@@ -460,16 +569,47 @@ var View;
                         var theta = -0.25 * Math.PI + 0.5 * Math.PI;
                         var dx = (this._length * i) * Math.cos(theta);
                         var dy = (this._length * i) * Math.sin(theta);
-                        var x = this._rodManager.linePointX + dx;
-                        var y = this._rodManager.linePointY + dy;
+                        var x = this._rodTopX;
+                        var y = this._rodTopY;
                         var mass = 1;
                         if (i == n - 1) {
-                            mass = 30;
+                            mass = 100;
                         }
                         var linePoint = new Line.LinePoint(this._layer, x, y, mass);
                         this._linePointList.push(linePoint);
                     }
                     this._rodTop = this._linePointList[0];
+                    this._floatPoint = this._linePointList[this._linePointList.length - 1];
+                    this._floatPoint.float();
+                };
+                LineManager.prototype.setRodTop = function (x, y) {
+                    this._rodTopX = x;
+                    this._rodTopY = y;
+                    this.init();
+                };
+                LineManager.prototype.swingBack = function () {
+                    this.k = 0.1;
+                    this._floatPoint.isFloating = false;
+                    this._floatPoint.isSwing = true;
+                };
+                LineManager.prototype.releaseLine = function () {
+                    this.k = 0.00001;
+                    this._floatPoint.isSwing = false;
+                    var v = 20;
+                    var value = 20 + 20 * Math.random();
+                    var theta = -0.15 * Math.PI;
+                    var n = this._linePointList.length;
+                    for (var i = 0; i < n; i++) {
+                        v = value * (i / n) * (i / n);
+                        var linePoint = this._linePointList[i];
+                        linePoint.vx = v * Math.cos(theta);
+                        linePoint.vy = v * Math.sin(theta);
+                    }
+                    this._floatPoint.vx = v * Math.cos(theta);
+                    this._floatPoint.vy = v * Math.sin(theta);
+                };
+                LineManager.prototype.setWave = function (wave) {
+                    this._wave = wave;
                 };
                 return LineManager;
             }());
@@ -481,11 +621,14 @@ var View;
 (function (View) {
     var Fisherman;
     (function (Fisherman) {
-        var RodManager = View.Fisherman.Rod.RodManager;
         var LineManager = View.Fisherman.Line.LineManager;
         var FishermanManager = (function () {
             function FishermanManager() {
-                this.count = 0;
+                this._rodK = 0.05;
+                this._rodU = 0.1;
+                this._rodVr = 0;
+                this._targetRodRotation = 0;
+                this._rodRotation = 0;
                 var svg = document.getElementById("svg");
                 this._layer = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 svg.appendChild(this._layer);
@@ -495,44 +638,36 @@ var View;
                 this._fishermanLayer.appendChild(g);
                 g.innerHTML = svg_fisherman;
                 g.setAttributeNS(null, "transform", "translate(-18,-80)");
-                var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                circle.setAttribute("cx", "0");
-                circle.setAttribute("cy", "0");
-                circle.setAttribute("r", "3");
-                circle.setAttribute("fill", "#F00");
-                this._fishermanLayer.appendChild(circle);
-                this._hand = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                this._hand.setAttribute("cx", "0");
-                this._hand.setAttribute("cy", "0");
-                this._hand.setAttribute("r", "2");
-                this._hand.setAttribute("fill", "yellow");
-                svg.appendChild(this._hand);
-                this._rodManager = new RodManager();
-                this._rodManager.setHand(this._hand);
                 this._lineManager = new LineManager();
-                this._lineManager.setRod(this._rodManager);
             }
-            Object.defineProperty(FishermanManager.prototype, "linePointY", {
-                get: function () {
-                    return this._linePointY;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(FishermanManager.prototype, "linePointX", {
-                get: function () {
-                    return this._linePointX;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(FishermanManager.prototype, "theta", {
-                get: function () {
-                    return this._theta;
-                },
-                enumerable: true,
-                configurable: true
-            });
+            FishermanManager.prototype.swing = function () {
+                var _this = this;
+                var handler = function () {
+                    _this.swing2();
+                };
+                clearTimeout(this._id);
+                this._lineManager.swingBack();
+                this._targetRodRotation = -80;
+                this._id = setTimeout(handler, 1000);
+            };
+            FishermanManager.prototype.swing2 = function () {
+                var _this = this;
+                var handler = function () {
+                    _this.swing3();
+                };
+                var handler2 = function () {
+                    _this.releaseLine();
+                };
+                this._targetRodRotation = 80;
+                this._id = setTimeout(handler, 200);
+                setTimeout(handler2, 60);
+            };
+            FishermanManager.prototype.releaseLine = function () {
+                this._lineManager.releaseLine();
+            };
+            FishermanManager.prototype.swing3 = function () {
+                this._targetRodRotation = 0;
+            };
             FishermanManager.prototype.setPosition = function (x, y, theta) {
                 var t = Math.atan2(150, 120) + Math.PI * (theta / 180);
                 var d = Math.sqrt(150 * 150 + 120 * 120);
@@ -543,26 +678,29 @@ var View;
                 var transform = "translate(" + (px) + "," + (py) + ")";
                 var rotate = "rotate(" + theta + "," + 120 + "," + 150 + ")";
                 this._layer.setAttributeNS(null, "transform", transform + " " + rotate);
-                var fishermanTheta = -1 * theta + (-20 + 40 * Math.cos(this.count));
-                rotate = "rotate(" + fishermanTheta + ")";
+                rotate = "rotate(" + this._fishermanTheta + ")";
                 this._fishermanLayer.setAttributeNS(null, "transform", rotate);
-                var rodTheta = -0.4 * Math.PI + (Math.PI * (fishermanTheta + theta) / 180);
+                var rodTheta = -0.4 * Math.PI + (Math.PI * (this._fishermanTheta + theta) / 180);
                 var rodRadius = 80;
-                px = x + 120 + localRadius * Math.cos(localTheta) + rodRadius * Math.cos(rodTheta);
-                py = y + 150 + localRadius * Math.sin(localTheta) + rodRadius * Math.sin(rodTheta);
-                transform = "translate(" + px + "," + py + ")";
-                this._hand.setAttributeNS(null, "transform", transform);
+                this._rodTopX = x + 120 + localRadius * Math.cos(localTheta) + rodRadius * Math.cos(rodTheta);
+                this._rodTopY = y + 150 + localRadius * Math.sin(localTheta) + rodRadius * Math.sin(rodTheta);
             };
             FishermanManager.prototype.enterFrame = function () {
+                var dr = this._targetRodRotation - this._rodRotation;
+                this._rodVr += dr * this._rodK - this._rodU * this._rodVr;
+                this._rodRotation += this._rodVr;
+                this._fishermanTheta = -1 * this._shipManager.currentTheta + this._rodRotation;
                 this.setPosition(this._shipManager.x, this._shipManager.y, this._shipManager.currentTheta);
-                this.count += 0.03;
-                if (this.count > 2 * Math.PI) {
-                    this.count += 2 * Math.PI;
-                }
-                this._lineManager.enterFrame();
+                this._lineManager.enterFrame(this._rodTopX, this._rodTopY);
             };
             FishermanManager.prototype.setShipManager = function (shipManager) {
                 this._shipManager = shipManager;
+                this._fishermanTheta = -1 * this._shipManager.currentTheta;
+                this.setPosition(this._shipManager.x, this._shipManager.y, this._shipManager.currentTheta);
+                this._lineManager.setRodTop(this._rodTopX, this._rodTopY);
+            };
+            FishermanManager.prototype.setWave = function (wave) {
+                this._lineManager.setWave(wave);
             };
             return FishermanManager;
         }());
@@ -578,18 +716,20 @@ var View;
     var FishermanManager = View.Fisherman.FishermanManager;
     var ViewManager = (function () {
         function ViewManager() {
+            var _this = this;
+            var click = function () {
+                _this.clickEventHandler();
+            };
             this._shipManager = new ShipManager();
             this._waveManager = new WaveManager();
-            var waveObject = this._waveManager.getShipWave();
-            this._shipManager.setWave(waveObject);
+            var shipWave = this._waveManager.getShipWave();
+            this._shipManager.setWave(shipWave);
             this._smokeManager = new SmokeManager();
             this._shipManager.setSmokeManager(this._smokeManager);
             this._moonManager = new MoonManager();
             this._fishermanManager = new FishermanManager();
             this._fishermanManager.setShipManager(this._shipManager);
-            var click = function () {
-                console.log("clickfdfdfdfd");
-            };
+            this._fishermanManager.setWave(shipWave);
             var svg = document.getElementById("svg");
             svg.addEventListener("click", click);
         }
@@ -601,6 +741,9 @@ var View;
             this._fishermanManager.enterFrame();
         };
         ViewManager.prototype.resize = function () {
+        };
+        ViewManager.prototype.clickEventHandler = function () {
+            this._fishermanManager.swing();
         };
         return ViewManager;
     }());
@@ -848,88 +991,6 @@ var View;
             return SmokeData;
         }());
     })(Smoke = View.Smoke || (View.Smoke = {}));
-})(View || (View = {}));
-var View;
-(function (View) {
-    var Wave;
-    (function (Wave) {
-        var WaveObject = (function () {
-            function WaveObject(layer, waveCount) {
-                this._count0 = 0;
-                this._count1 = 0;
-                this._count2 = 0;
-                var svg = document.getElementById("svg");
-                var width = Number(svg.getAttribute("width"));
-                var height = Number(svg.getAttribute("height"));
-                this._polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-                this._polyline.setAttributeNS(null, "fill", "#003");
-                this._polyline.setAttributeNS(null, "opacity", "0.1");
-                this._height = height * 0.5 - 50 * waveCount;
-                this._count0 = 0.5 * waveCount;
-                this._count1 = 1.0 * waveCount;
-                this._count2 = 2 * Math.PI * Math.random();
-                this._pointList = [];
-                var n = width;
-                for (var i = 0; i < n; i++) {
-                    var point = new Wave.WavePoint();
-                    this._pointList.push(point);
-                }
-                this.startPoint = new Wave.WavePoint(0, height);
-                this.endPoint = new Wave.WavePoint(width, height);
-                layer.appendChild(this._polyline);
-                this.setWavePoint();
-                this.draw();
-            }
-            Object.defineProperty(WaveObject.prototype, "pointList", {
-                get: function () {
-                    return this._pointList;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            WaveObject.prototype.enterFrame = function () {
-                this._count0 += 0.001;
-                if (this._count0 > 2 * Math.PI) {
-                    this._count0 -= 2 * Math.PI;
-                }
-                this._count1 += 0.005;
-                if (this._count1 > 2 * Math.PI) {
-                    this._count1 -= 2 * Math.PI;
-                }
-                this._count2 += 0.05;
-                if (this._count2 > 2 * Math.PI) {
-                    this._count2 -= 2 * Math.PI;
-                }
-                this.setWavePoint();
-                this.draw();
-            };
-            WaveObject.prototype.setWavePoint = function () {
-                var n = this._pointList.length;
-                this._pointList = [];
-                for (var i = 0; i < n; i++) {
-                    var x = i;
-                    var y = this._height + (100 * Math.cos(x * 0.001 + this._count0)) +
-                        (50 * Math.cos(x * 0.01 + this._count0)) +
-                        (5 * Math.cos(x * 0.05 + this._count2));
-                    var point = new Wave.WavePoint(x, y);
-                    this._pointList.push(point);
-                }
-            };
-            WaveObject.prototype.draw = function () {
-                var value = this.startPoint.x + "," + this.startPoint.y + " ";
-                var n = this._pointList.length;
-                for (var i = 0; i < n; i++) {
-                    var point = this._pointList[i];
-                    value += point.x + "," + point.y + " ";
-                }
-                value += this.endPoint.x + "," + this.endPoint.y + " ";
-                value += this.startPoint.x + "," + this.startPoint.y;
-                this._polyline.setAttributeNS(null, "points", value);
-            };
-            return WaveObject;
-        }());
-        Wave.WaveObject = WaveObject;
-    })(Wave = View.Wave || (View.Wave = {}));
 })(View || (View = {}));
 var View;
 (function (View) {

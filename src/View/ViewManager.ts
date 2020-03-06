@@ -10,6 +10,7 @@ namespace View
     import SmokeManager = View.Smoke.SmokeManager;
     import MoonManager = View.Moon.MoonManager;
     import FishermanManager = View.Fisherman.FishermanManager;
+    import WaveObject = View.Wave.WaveObject;
 
     export class ViewManager {
         private _shipManager:ShipManager;
@@ -18,26 +19,23 @@ namespace View
         private _moonManager:MoonManager;
         private _fishermanManager:FishermanManager;
         constructor() {
+            const click = () =>
+            {
+                this.clickEventHandler();
+            };
             this._shipManager = new ShipManager();
             this._waveManager = new WaveManager();
             //
-            let waveObject = this._waveManager.getShipWave();
-            this._shipManager.setWave(waveObject);
+            let shipWave:WaveObject = this._waveManager.getShipWave();
+            this._shipManager.setWave(shipWave);
             //
             this._smokeManager = new SmokeManager();
-
             this._shipManager.setSmokeManager(this._smokeManager);
-
             this._moonManager = new MoonManager();
-
             this._fishermanManager = new FishermanManager();
             this._fishermanManager.setShipManager(this._shipManager);
+            this._fishermanManager.setWave(shipWave);
 
-
-            const click = () =>
-            {
-                console.log("clickfdfdfdfd")
-            }
             const svg = document.getElementById("svg");
             svg.addEventListener("click" ,click);
         }
@@ -54,6 +52,11 @@ namespace View
         public resize():void
         {
 
+        }
+        //
+        private clickEventHandler():void
+        {
+            this._fishermanManager.swing();
         }
     }
 }
