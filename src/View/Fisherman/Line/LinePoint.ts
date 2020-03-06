@@ -37,9 +37,13 @@ namespace View.Fisherman.Line
 
         constructor(layer:SVGElement,x:number ,y:number, mass:number = 1) {
             this._circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            layer.appendChild(this._circle);
+            /*
+            this._circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             this._circle.setAttribute("r", "3");
             this._circle.setAttribute("fill", "#F0F");
             layer.appendChild(this._circle);
+             */
 
             this.x = x;
             this.y = y;
@@ -47,8 +51,8 @@ namespace View.Fisherman.Line
         }
         public float():void
         {
-            this._circle.setAttribute("r", "5");
-            this._circle.setAttribute("fill", "#FFF");
+            this._circle.setAttribute("r", "3");
+            this._circle.setAttribute("fill", "#000");
         }
     }
 }

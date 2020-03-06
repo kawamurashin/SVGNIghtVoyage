@@ -342,8 +342,6 @@ var View;
                     this.isFloating = false;
                     this.isSwing = false;
                     this._circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    this._circle.setAttribute("r", "3");
-                    this._circle.setAttribute("fill", "#F0F");
                     layer.appendChild(this._circle);
                     this.x = x;
                     this.y = y;
@@ -381,8 +379,8 @@ var View;
                     configurable: true
                 });
                 LinePoint.prototype.float = function () {
-                    this._circle.setAttribute("r", "5");
-                    this._circle.setAttribute("fill", "#FFF");
+                    this._circle.setAttribute("r", "3");
+                    this._circle.setAttribute("fill", "#000");
                 };
                 return LinePoint;
             }());
@@ -483,6 +481,15 @@ var View;
                     this._length = 40;
                     this.k = 0.1;
                     this._linePointList = [];
+                    var svg = document.getElementById("svg");
+                    var layer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                    svg.appendChild(layer);
+                    this._path = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+                    this._path.setAttribute("stroke", "#000");
+                    this._path.setAttribute("fill", "none");
+                    this._path.setAttribute("stroke-width", "1");
+                    this._path.setAttribute("stroke-linejoin", "round");
+                    layer.appendChild(this._path);
                 }
                 LineManager.prototype.enterFrame = function (rodTopX, rodTopY) {
                     if (rodTopX === void 0) { rodTopX = null; }
@@ -558,6 +565,7 @@ var View;
                             this.k = 0.001;
                         }
                     }
+                    this.draw();
                 };
                 LineManager.prototype.init = function () {
                     var svg = document.getElementById("svg");
@@ -581,6 +589,15 @@ var View;
                     this._rodTop = this._linePointList[0];
                     this._floatPoint = this._linePointList[this._linePointList.length - 1];
                     this._floatPoint.float();
+                };
+                LineManager.prototype.draw = function () {
+                    var string = "";
+                    var n = this._linePointList.length;
+                    for (var i = 0; i < n; i++) {
+                        var linePoint = this._linePointList[i];
+                        string += linePoint.x + "," + linePoint.y + " ";
+                    }
+                    this._path.setAttribute("points", string);
                 };
                 LineManager.prototype.setRodTop = function (x, y) {
                     this._rodTopX = x;
@@ -732,6 +749,7 @@ var View;
             this._fishermanManager.setWave(shipWave);
             var svg = document.getElementById("svg");
             svg.addEventListener("click", click);
+            this.resize();
         }
         ViewManager.prototype.enterFrame = function () {
             this._shipManager.enterFrame();
@@ -741,6 +759,30 @@ var View;
             this._fishermanManager.enterFrame();
         };
         ViewManager.prototype.resize = function () {
+            var height = 0;
+            var width = 0;
+            var svg = document.getElementById("svg");
+            var rate = 1920 / 1080;
+            if (rate < document.body.clientWidth / document.body.clientHeight) {
+                if (document.body.clientHeight > 1080) {
+                    height = 1080;
+                }
+                else {
+                    height = document.body.clientHeight;
+                }
+                width = height * rate;
+            }
+            else {
+                if (document.body.clientWidth > 1920) {
+                    width = 1920;
+                }
+                else {
+                    width = document.body.clientWidth;
+                }
+                height = width / rate;
+            }
+            svg.setAttribute("width", width.toString());
+            svg.setAttribute("height", height.toString());
         };
         ViewManager.prototype.clickEventHandler = function () {
             this._fishermanManager.swing();

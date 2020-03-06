@@ -38,6 +38,8 @@ namespace View
 
             const svg = document.getElementById("svg");
             svg.addEventListener("click" ,click);
+
+            this.resize();
         }
 
         public enterFrame():void
@@ -51,7 +53,37 @@ namespace View
 
         public resize():void
         {
+            let height:number = 0;
+            let width:number = 0;
+            const svg:HTMLElement = document.getElementById("svg");
 
+            const rate = 1920 /1080;
+            if(rate < document.body.clientWidth / document.body.clientHeight)
+            {
+                if(document.body.clientHeight > 1080)
+                {
+                    height = 1080;
+                }
+                else
+                {
+                    height = document.body.clientHeight
+                }
+                width = height * rate;
+            }
+            else
+            {
+                if(document.body.clientWidth > 1920)
+                {
+                    width = 1920;
+                }
+                else
+                {
+                    width = document.body.clientWidth
+                }
+                height = width/rate;
+            }
+            svg.setAttribute("width", width.toString());
+            svg.setAttribute("height", height.toString());
         }
         //
         private clickEventHandler():void

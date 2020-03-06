@@ -17,25 +17,35 @@ namespace View.Fisherman.Line {
         private _linePointList: LinePoint[] = [];
 
         private _wave:WaveObject;
+        private readonly _path:SVGElement;
 
         constructor() {
+            let svg = document.getElementById("svg");
+            let layer:SVGElement = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            svg.appendChild(layer);
+
+            this._path = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+            this._path.setAttribute("stroke", "#000");
+            this._path.setAttribute("fill", "none");
+            this._path.setAttribute("stroke-width", "1");
+            this._path.setAttribute("stroke-linejoin", "round");
+
+
+
+            layer.appendChild(this._path);
         }
 
         public enterFrame(rodTopX:number = null , rodTopY:number = null): void {
-
             let u: number = 0.03;
             let g: number = 0.003;
             let n: number = this._linePointList.length;
-
             if(this._linePointList.length == 0)
             {
                 return
             }
             this._rodTop = this._linePointList[0];
-
             this._rodTop.x = rodTopX;
             this._rodTop.y = rodTopY;
-
             for (let i: number = 1; i < n; i++) {
                 let linePoint: LinePoint = this._linePointList[i];
                 linePoint.vy += g * linePoint.mass;
@@ -44,14 +54,9 @@ namespace View.Fisherman.Line {
             for (let i: number = 0; i < n; i++) {
                 let dx: number;
                 let dy: number;
-
-
                 let linePoint: LinePoint = this._linePointList[i];
                 let prev: LinePoint;
                 let next: LinePoint;
-
-
-
                 if (i != 0) {
                     prev = this._linePointList[i - 1];
                     dx = prev.x - linePoint.x;
@@ -110,15 +115,15 @@ namespace View.Fisherman.Line {
             }
             if(this.k < 0.001)
             {
-
                 let dk:number = 0.001  - this.k;
-
                 this.k += dk * 0.3;
                 if(this.k > 0.001)
                 {
                     this.k = 0.001;
                 }
             }
+
+            this.draw();
         }
 
         private init(): void {
@@ -145,6 +150,19 @@ namespace View.Fisherman.Line {
             this._rodTop = this._linePointList[0];
             this._floatPoint = this._linePointList[this._linePointList.length - 1];
             this._floatPoint.float();
+        }
+
+        private draw():void
+        {
+            let string:string = "";
+            let n:number = this._linePointList.length;
+            for(let i:number= 0 ; i<n;i++)
+            {
+                let linePoint:LinePoint = this._linePointList[i];
+                string += linePoint.x+","+linePoint.y  + " ";
+            }
+
+            this._path.setAttribute("points", string);
         }
 
         setRodTop(x: number, y: number) {
